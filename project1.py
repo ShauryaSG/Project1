@@ -1,3 +1,10 @@
+"""
+Shaurya Ganguly
+AER850
+Project 1
+Oct/15/2023
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,9 +17,13 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score, classification_report, f1_score, precision_score
 import joblib
-#from mpl_toolkits.mplot3d import Axes3D
 
-# Step 1: Read the data from the CSV file
+
+"""
+data preprocessing and visualization
+"""
+
+# Step 1: Read the data from the CSV file and turn it into a dataframe
 df = pd.read_csv('data.csv')
 
 # Step 2: Plot the 3D scatter plot using Matplotlib, color by 'Step'
@@ -40,7 +51,7 @@ print("\nSummary Statistics:")
 print(df.groupby('Step').describe())
 
 
-# Correlation analysis
+#Step 3: Correlation analysis
 step = 'Step'
 
 # Calculate Pearson correlation coefficients
@@ -56,36 +67,28 @@ plt.show()
 # Explain the correlation with the target variable
 print("Correlation of features with the target variable:\n")
 print(correlations_with_target)
-# Provide explanation of the correlations and their impact on predictions
-print("\nExplanation of correlations:")
-print("A positive correlation with the target variable indicates that as the feature increases, the target variable tends to increase as well. Conversely, a negative correlation suggests an inverse relationship, where as the feature increases, the target variable tends to decrease. The magnitude of correlation, close to 1 or -1, indicates the strength of the relationship between the feature and the target variable. Understanding these correlations is crucial for making predictions using the features.")
 
 
 
-# Step 1: Data Preprocessing
+"""
+machine learning part
+"""
 
-# Assuming features are all columns except the target variable
-X = df.drop('Step', axis=1)
+
+# Step 4: Data Preprocessing
+x = df.drop('Step', axis=1)
 y = df['Step']
 
-# Step 2: Split the Data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+#Split the Data
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
-# Step 3: Model Selection and Explanation
 
-# Logistic Regression
+#create the models
 logistic_model = LogisticRegression()
-# Explanation: Logistic Regression is a common choice for binary classification problems.
-
-# Decision Tree
 decision_tree_model = DecisionTreeClassifier()
-# Explanation: Decision Tree is versatile and interpretable, making it suitable for classification problems.
-
-# Random Forest
 random_forest_model = RandomForestClassifier()
-# Explanation: Random Forest is an ensemble method that often performs well and handles complex relationships.
 
-# Step 4: Grid Search Cross-Validation for Hyperparameter Tuning
+# Step 5: Grid Search Cross-Validation for Hyperparameter Tuning
 
 # Define hyperparameters for each model
 logistic_params = {'C': [0.1, 1, 10]}
@@ -94,28 +97,28 @@ random_forest_params = {'n_estimators': [50, 100, 150], 'max_depth': [None, 10, 
 
 # Perform Grid Search for each model
 logistic_grid = GridSearchCV(logistic_model, logistic_params, cv=5)
-logistic_grid.fit(X_train, y_train)
+logistic_grid.fit(x_train, y_train)
 
 decision_tree_grid = GridSearchCV(decision_tree_model, decision_tree_params, cv=5)
-decision_tree_grid.fit(X_train, y_train)
+decision_tree_grid.fit(x_train, y_train)
 
 random_forest_grid = GridSearchCV(random_forest_model, random_forest_params, cv=5)
-random_forest_grid.fit(X_train, y_train)
+random_forest_grid.fit(x_train, y_train)
 
 # Print best hyperparameters for each model
 print("Best Hyperparameters for Logistic Regression:", logistic_grid.best_params_)
 print("Best Hyperparameters for Decision Tree:", decision_tree_grid.best_params_)
 print("Best Hyperparameters for Random Forest:", random_forest_grid.best_params_)
 
-# Evaluate models
+#Step 6: Evaluate models
 logistic_best_model = logistic_grid.best_estimator_
 decision_tree_best_model = decision_tree_grid.best_estimator_
 random_forest_best_model = random_forest_grid.best_estimator_
 
 # Predictions
-y_pred_logistic = logistic_best_model.predict(X_test)
-y_pred_decision_tree = decision_tree_best_model.predict(X_test)
-y_pred_random_forest = random_forest_best_model.predict(X_test)
+y_pred_logistic = logistic_best_model.predict(x_test)
+y_pred_decision_tree = decision_tree_best_model.predict(x_test)
+y_pred_random_forest = random_forest_best_model.predict(x_test)
 
 # Print evaluation metrics for each model
 print("\nLogistic Regression:")
@@ -129,11 +132,6 @@ print("Classification Report:\n", classification_report(y_test, y_pred_decision_
 print("\nRandom Forest:")
 print("Accuracy:", accuracy_score(y_test, y_pred_random_forest))
 print("Classification Report:\n", classification_report(y_test, y_pred_random_forest))
-
-
-
-
-
 
 
 # Calculate metrics for each model
@@ -156,17 +154,17 @@ metrics = {
 }
 
 # Display the metrics for each model
-print("Model Performance Metrics:")
+print("\nModel Performance Metrics:")
 for model, scores in metrics.items():
     print(f"\n{model}:")
     print("F1 Score:", scores['f1_score'])
     print("Precision:", scores['precision'])
     print("Accuracy:", scores['accuracy'])
 
-# Select the best model based on the F1 score
+#Step 7: Select the best model based on the F1 score
 best_model = max(metrics, key=lambda k: metrics[k]['f1_score'])
 
-# Create a confusion matrix for the selected best model
+#Step 8: Create a confusion matrix for the selected best model
 best_model_predictions = {
     'Logistic Regression': y_pred_logistic,
     'Decision Tree': y_pred_decision_tree,
@@ -175,37 +173,27 @@ best_model_predictions = {
 
 conf_matrix = confusion_matrix(y_test, best_model_predictions[best_model])
 plt.figure(figsize=(8, 6))
-sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False,
-            xticklabels=['Class 0', 'Class 1'], yticklabels=['Class 0', 'Class 1'])
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False)
 plt.xlabel('Predicted')
 plt.ylabel('True')
 plt.title(f'Confusion Matrix for {best_model}')
 plt.show()
 
 
-
-
+#Step 9: train the best model based on the confusion matrix
 best_model = RandomForestClassifier(n_estimators=100, max_depth=10)
-
-
-# Fit the model to the entire dataset
-best_model.fit(X, y)
+best_model.fit(x, y)
 
 # Save the trained model in a joblib format
 joblib.dump(best_model, 'best_model.joblib')
-
-# Load the saved model
 loaded_model = joblib.load('best_model.joblib')
 
-# Given coordinates for prediction
-coordinates_to_predict = [[9.375, 3.0625, 1.51], [6.995, 5.125, 0.3875],
-                          [0, 3.0625, 1.93], [9.4, 3, 1.8], [9.4, 3, 1.3]]
 
-# Predict the maintenance step for the provided coordinates
+#Step 10: Predict the maintenance step for the provided coordinates
+coordinates_to_predict = [[9.375, 3.0625, 1.51], [6.995, 5.125, 0.3875],[0, 3.0625, 1.93], [9.4, 3, 1.8], [9.4, 3, 1.3]]
 predictions = loaded_model.predict(coordinates_to_predict)
 
 # Print the predicted maintenance steps for the given coordinates
 print("Predicted Maintenance Steps:")
 for i, coord in enumerate(coordinates_to_predict):
     print(f"Coordinates {i+1}: {coord} => Predicted Step: {predictions[i]}")
-
